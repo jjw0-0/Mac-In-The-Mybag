@@ -7,38 +7,41 @@
       <stop stop-color="#A78BFA"/><stop offset=".5" stop-color="#7C5CF6"/><stop offset="1" stop-color="#4F46E5"/>
     </linearGradient>
     <linearGradient id="scr" x1="37" y1="41" x2="87" y2="75" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#BAF7FF"/><stop offset=".5" stop-color="#67E8F9"/><stop offset="1" stop-color="#818CF8"/>
+      <stop stop-color="#D9FCFF"/><stop offset=".5" stop-color="#5EE6FB"/><stop offset="1" stop-color="#7C8CFF"/>
     </linearGradient>
     <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#A78BFA"/><stop offset="1" stop-color="#22D3EE"/>
     </linearGradient>
-    <radialGradient id="gloss" cx="0.32" cy="0.14" r="0.92">
-      <stop stop-color="#FFFFFF" stop-opacity="0.50"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+    <radialGradient id="gloss" cx="0.32" cy="0.13" r="0.95">
+      <stop stop-color="#FFFFFF" stop-opacity="0.55"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.4"/></filter>
-    <filter id="ambient" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="11"/></filter>
+    <linearGradient id="botRefl" x1="0" y1="94" x2="0" y2="124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.14"/>
+    </linearGradient>
+    <filter id="glow" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="ambient" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="12"/></filter>
     <clipPath id="tileclip"><rect width="124" height="124" rx="30"/></clipPath>
   </defs>
 
   <rect x="1" y="1" width="818" height="218" rx="28" fill="url(#bg)" stroke="#23304D" stroke-width="2"/>
 
   <g transform="translate(48,48)">
-    <!-- ambient lift -->
-    <rect x="6" y="12" width="112" height="112" rx="30" fill="#6D28D9" opacity="0.6" filter="url(#ambient)"/>
+    <!-- centered ambient halo -->
+    <rect x="2" y="8" width="120" height="120" rx="32" fill="#7C3AED" opacity="0.5" filter="url(#ambient)"/>
 
     <!-- tile -->
     <rect width="124" height="124" rx="30" fill="url(#tile)"/>
 
     <g clip-path="url(#tileclip)">
       <!-- top sheen -->
-      <path d="M-6 -6 H130 V30 Q62 6 -6 30 Z" fill="#FFFFFF" opacity="0.16"/>
+      <path d="M-6 -6 H130 V31 Q62 7 -6 31 Z" fill="#FFFFFF" opacity="0.20"/>
       <!-- gloss -->
       <rect width="124" height="124" rx="30" fill="url(#gloss)"/>
 
       <!-- screen + waves GLOW (blurred) -->
       <g filter="url(#glow)">
-        <rect x="37" y="41" width="50" height="34" rx="4" fill="#5EE6FB"/>
-        <g stroke="#A7F3FF" stroke-width="4.5" fill="none" stroke-linecap="round">
+        <rect x="37" y="41" width="50" height="34" rx="4" fill="#67ECFF"/>
+        <g stroke="#A5F3FC" stroke-width="4.5" fill="none" stroke-linecap="round">
           <path d="M98 24 q13 13 0 26"/><path d="M90 31 q7 7 0 13"/>
         </g>
       </g>
@@ -46,21 +49,24 @@
       <!-- macbook -->
       <rect x="32" y="36" width="60" height="44" rx="6" fill="#0B1020"/>
       <rect x="37" y="41" width="50" height="34" rx="3" fill="url(#scr)"/>
-      <path d="M37 52 Q60 45 87 49 L87 41 H37 Z" fill="#FFFFFF" opacity="0.16"/>
-      <path d="M56 50 L56 66 L70 58 Z" fill="#0B1020" fill-opacity="0.80"/>
+      <path d="M37 52 Q60 45 87 49 L87 41 H37 Z" fill="#FFFFFF" opacity="0.18"/>
+      <path d="M56 50 L56 66 L70 58 Z" fill="#0B1020" fill-opacity="0.82" stroke="#0B1020" stroke-width="2.4" stroke-linejoin="round"/>
       <path d="M24 84 H100 L94 92 H30 Z" fill="#EEF2FF"/>
       <path d="M24 84 H100 L98.6 86 H25.4 Z" fill="#A5B4FC"/>
       <rect x="50" y="84" width="24" height="3" rx="1.5" fill="#0B1020" fill-opacity="0.18"/>
 
-      <!-- waves (crisp) -->
-      <g stroke="#FFFFFF" stroke-width="4.5" fill="none" stroke-linecap="round">
+      <!-- crisp signal waves (cyan) -->
+      <g stroke="#CFFAFE" stroke-width="4.5" fill="none" stroke-linecap="round">
         <path d="M98 24 q13 13 0 26"/><path d="M90 31 q7 7 0 13"/>
       </g>
-      <circle cx="86" cy="37" r="2.5" fill="#FFFFFF"/>
+      <circle cx="86" cy="37" r="2.5" fill="#ECFEFF"/>
+
+      <!-- bottom gloss reflection -->
+      <rect x="0" y="94" width="124" height="30" fill="url(#botRefl)"/>
     </g>
 
     <!-- bevel -->
-    <rect x="1" y="1" width="122" height="122" rx="29" fill="none" stroke="#FFFFFF" stroke-opacity="0.30" stroke-width="1.4"/>
+    <rect x="1" y="1" width="122" height="122" rx="29" fill="none" stroke="#FFFFFF" stroke-opacity="0.32" stroke-width="1.4"/>
     <rect x="0.6" y="0.6" width="122.8" height="122.8" rx="29.4" fill="none" stroke="#1E1B4B" stroke-opacity="0.22" stroke-width="1"/>
   </g>
 
