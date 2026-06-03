@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/jjw0-0/Mac-In-The-Mybag/discussions
+    about: Questions, ideas, and general discussion
+  - name: 🔒 Security policy
+    url: https://github.com/jjw0-0/Mac-In-The-Mybag/security/policy
+    about: Report a vulnerability privately (please don't open a public issue)

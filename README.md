@@ -1,28 +1,49 @@
 <div align="center">
 
-# 🎒 Mac-In-The-Mybag · **MITM**
+<img src="assets/logo.svg" alt="Mac-In-The-Mybag (MITM)" width="660">
 
 ### Your MacBook lives in your bag. Drive it from your iPhone.
 
-Stream and control a **lid-closed, bag-stowed MacBook** from an iPhone or iPad —
-over your phone's hotspot, with low latency, while you're on the move.
+*Stream and control a **lid-closed, bag-stowed MacBook** from an iPhone or iPad —
+over your phone's hotspot, low-latency, while you're on the move.*
 
-[![CI](https://github.com/jjw0-0/Mac-In-The-Mybag/actions/workflows/ci.yml/badge.svg)](https://github.com/jjw0-0/Mac-In-The-Mybag/actions/workflows/ci.yml)
-[![Status](https://img.shields.io/badge/status-pre--alpha-orange)](#project-status)
-[![Platform](https://img.shields.io/badge/platform-macOS%2013%2B%20%7C%20iOS%2016%2B-blue)](#build)
-[![Swift](https://img.shields.io/badge/swift-5.9%2B-fa7343?logo=swift)](#build)
-[![Architecture](https://img.shields.io/badge/architecture-decided-success)](#architecture)
+<br/>
+
+[![English](https://img.shields.io/badge/lang-English-1f6feb?style=for-the-badge)](README.md)
+[![한국어](https://img.shields.io/badge/lang-한국어-d83a3a?style=for-the-badge)](README_KO.md)
+
+[![CI](https://img.shields.io/github/actions/workflow/status/jjw0-0/Mac-In-The-Mybag/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)](https://github.com/jjw0-0/Mac-In-The-Mybag/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
+[![Swift](https://img.shields.io/badge/Swift-5.9+-fa7343?style=for-the-badge&logo=swift&logoColor=white)](Package.swift)
+[![Platform](https://img.shields.io/badge/platform-macOS%2013+%20·%20iOS%2016+-0a84ff?style=for-the-badge&logo=apple&logoColor=white)](#-build)
+[![Stars](https://img.shields.io/github/stars/jjw0-0/Mac-In-The-Mybag?style=for-the-badge&logo=github&color=f5c518)](https://github.com/jjw0-0/Mac-In-The-Mybag/stargazers)
 
 </div>
 
 ---
 
+> [!WARNING]
+> **Pre-alpha.** The architecture is decided and the foundation builds & tests green, but the
+> end-to-end pipeline is still being assembled. Watch/Star to follow along — it's cultivated commit by commit.
+
 ## Why the name?
 
-**M**ac-**I**n-**T**he-**M**ybag. The wink at *Man-In-The-Middle* is the whole point: the only
-thing allowed between your phone and your Mac is **you**. Pairing is bootstrapped **out-of-band**
-through a QR code carrying an ECDH public-key fingerprint, and every byte rides **TLS 1.3** with
-downgrade refused — so an actual man-in-the-middle walks away with nothing.
+**M**ac-**I**n-**T**he-**M**ybag. The wink at *Man-In-The-Middle* is the whole point: the only thing
+allowed between your phone and your Mac is **you**. Pairing is bootstrapped **out-of-band** through a
+QR code carrying an ECDH public-key fingerprint, and every byte rides **TLS 1.3** with downgrade
+refused — so an actual man-in-the-middle walks away with nothing.
+
+## Table of Contents
+
+- [The story](#the-story)
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Security & honest limitations](#-security--honest-limitations)
+- [Build](#-build)
+- [Project status](#-project-status)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## The story
 
@@ -34,7 +55,7 @@ Commercial RDP/VNC assumes desktop-to-desktop sessions on stable Wi-Fi. **MITM**
 opposite: a phone-provided hotspot, a Mac kept awake inside a closed bag, and touch-first
 interaction designed for movement.
 
-## Features
+## ✨ Features
 
 | | |
 |---|---|
@@ -45,72 +66,74 @@ interaction designed for movement.
 | 📡 **Built for the move** | QUIC path migration rides hotspot ↔ cellular handoffs without dropping the session |
 | 🔁 **Self-healing** | Auto-reconnect with session recovery; adaptive bitrate degrades gracefully, never flaps |
 
-## Architecture
+## 🏗 Architecture
 
-A single Swift package, three targets (`H2` — separated targets + a shared core):
+A single Swift package, three targets (`H2` — separated targets over a shared core):
 
-```
-┌─────────────┐      QUIC / TLS 1.3      ┌──────────────┐
-│  IOSClient  │ ◀──── video stream ────▶ │  MacOSAgent  │
-│  (iOS)      │ ───── input events ────▶ │  (macOS)     │
-└──────┬──────┘                          └──────┬───────┘
-       │            ┌─────────────┐             │
-       └──────────▶ │ SharedCore  │ ◀───────────┘
-                    │ (protocols, │
-                    │  codecs,    │   pure, platform-free logic — test-focused
-                    │  state m/c) │
-                    └─────────────┘
+```mermaid
+flowchart LR
+  subgraph Phone["📱 iPhone / iPad · IOSClient"]
+    UI["Gestures · Rendering<br/>Pairing UI · L2 harness"]
+  end
+  subgraph Mac["💻 MacBook in the bag · MacOSAgent"]
+    CAP["SCK + VideoToolbox<br/>capture & encode"]
+    INJ["CGEvent<br/>input injection"]
+    VD["CGVirtualDisplay<br/>lid-closed surface"]
+  end
+  Core(["🧩 SharedCore<br/>protocols · codecs<br/>state machine · coordinates"])
+  Phone == "input events" ==> Mac
+  Mac == "H.264 over QUIC · TLS 1.3" ==> Phone
+  Phone -.depends on.-> Core
+  Mac -.depends on.-> Core
 ```
 
 | Layer | Decision |
 |---|---|
 | **Transport** | QUIC (`Network.framework`) + Bonjour discovery + IP-hint fallback + path migration |
-| **Video** | ScreenCaptureKit + VideoToolbox · H.264 default, H.265 one-way promotion on RTT≤50ms & ≥5Mbps |
-| **Input** | `CGEvent` synthetic events (trackpad-first gesture map) |
+| **Video** | ScreenCaptureKit + VideoToolbox · H.264 default, H.265 one-way promotion on RTT ≤ 50 ms & ≥ 5 Mbps |
+| **Input** | `CGEvent` synthetic events, trackpad-first gesture map |
 | **Pairing** | QR + ECDH (out-of-band fingerprint) → persistent device trust |
 | **Crypto** | TLS 1.3, downgrade refused, 0-RTT disabled on the input channel |
-| **Lid-closed capture** | `CGVirtualDisplay` headless display (validated: 99.97% continuity, lid-closed) |
+| **Lid-closed capture** | `CGVirtualDisplay` headless display — validated at **99.97 %** continuity, lid closed |
 | **Adaptive quality** | RTT/loss/bandwidth ladder with hysteresis; input channel prioritized under starvation |
 
-## Security & honest limitations
+## 🔐 Security & honest limitations
 
-We'd rather tell you up front:
+We'd rather tell you up front — see [`SECURITY.md`](SECURITY.md) for the full policy.
 
-- 🚫 **Secure input fields can't be driven remotely.** macOS `EnableSecureEventInput` blocks
-  synthetic events at the lock screen, password prompts, and Touch ID dialogs — by `CGEvent` *or*
-  IOKit HID. This is a **permanent** OS-level boundary, not a bug we'll fix.
-- 🔁 **Unattended operation is guaranteed only until a reboot.** FileVault's pre-boot login and
-  TCC permission re-grants need one physical touch after a restart. We recommend disabling
-  automatic update reboots; FileVault auto-login stays **off** (disk encryption wins over convenience).
-- 🌡️ **Thermals are bounded.** In a sealed bag the agent caps enclosure temperature (~41°C) and
-  steps down to a power-save encode before it ever cooks your battery — safety beats continuity.
+- 🚫 **Secure input fields can't be driven remotely.** macOS `EnableSecureEventInput` blocks synthetic
+  events at the lock screen, password prompts, and Touch ID dialogs — by `CGEvent` *or* IOKit HID.
+  This is a **permanent** OS-level boundary, not a bug we'll fix.
+- 🔁 **Unattended operation is guaranteed only until a reboot.** FileVault's pre-boot login and TCC
+  permission re-grants need one physical touch after a restart. FileVault auto-login stays **off**
+  (disk encryption wins over convenience); disabling automatic update reboots is recommended.
+- 🌡️ **Thermals are bounded.** In a sealed bag the agent caps enclosure temperature (~41 °C) and steps
+  down to a power-save encode before it ever cooks your battery — safety beats continuity.
 
-## Project status
-
-> **Pre-alpha — foundations laid, pipeline next.**
-
-- ✅ **Kill-gate PoC passed** — lid-closed capture continuity validated (`CGVirtualDisplay`, 99.97%, ≥34 fps)
-- ✅ **All 10 architecture decision gates resolved** — transport, security, thermal, scope, coordinates
-- ✅ **`H2` package scaffold builds & tests green** — `SharedCore` coordinate-mapping + connection state machine under test
-- 🔜 `DisplayProvider` extraction → input codec & replay defense → L2 latency harness → main capture/input pipeline
-
-See the [roadmap](#roadmap) for what's landing next.
-
-## Build
+## 🛠 Build
 
 Requires Xcode 15+ / Swift 5.9+ on macOS 13+.
 
 ```sh
 git clone https://github.com/jjw0-0/Mac-In-The-Mybag.git
 cd Mac-In-The-Mybag
-swift build      # builds SharedCore + MacOSAgent (+ IOSClient, iOS code guarded)
+swift build      # builds SharedCore + MacOSAgent (+ IOSClient; iOS code is #if os(iOS)-guarded)
 swift test       # runs the SharedCore unit suite
 ```
 
 > The iOS app shell (`@main`) and on-device builds are added via an Xcode project that depends on
-> this package; `swift build` targets the macOS host, so iOS-only code is `#if os(iOS)`-guarded.
+> this package. `swift build` targets the macOS host, so iOS-only code is `#if os(iOS)`-guarded.
 
-## Roadmap
+## 📍 Project status
+
+> **Pre-alpha — foundations laid, pipeline next.**
+
+- ✅ **Kill-gate PoC passed** — lid-closed capture continuity validated (`CGVirtualDisplay`, 99.97 %, ≥ 34 fps)
+- ✅ **All 10 architecture decision gates resolved** — transport, security, thermal, scope, coordinates
+- ✅ **`H2` package scaffold builds & tests green** — `SharedCore` coordinate mapping + connection state machine under test
+- 🔜 `DisplayProvider` extraction → input codec & replay defense → L2 latency harness → main pipeline
+
+## 🗺 Roadmap
 
 - [x] G-Sleep kill-gate PoC (lid-closed capture)
 - [x] Architecture decision gates (DG-1 … DG-10)
@@ -123,12 +146,28 @@ swift test       # runs the SharedCore unit suite
 - [ ] iOS client (rendering, gestures, pairing UI)
 - [ ] MVP: F1–F8 core + auto-reconnect, ABR, onboarding, trackpad, thermal guard
 
-## License
+## 🤝 Contributing
 
-See [`LICENSE`](LICENSE).
+Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) and our
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) before opening a PR. Found a vulnerability? See
+[`SECURITY.md`](SECURITY.md) for responsible disclosure.
+
+- 🐛 [Report a bug](https://github.com/jjw0-0/Mac-In-The-Mybag/issues/new?template=bug_report.yml)
+- 💡 [Request a feature](https://github.com/jjw0-0/Mac-In-The-Mybag/issues/new?template=feature_request.yml)
+- 💬 [Discussions](https://github.com/jjw0-0/Mac-In-The-Mybag/discussions)
+
+## ⭐ Star history
+
+<a href="https://star-history.com/#jjw0-0/Mac-In-The-Mybag&Date">
+  <img src="https://api.star-history.com/svg?repos=jjw0-0/Mac-In-The-Mybag&type=Date" alt="Star History Chart" width="600">
+</a>
+
+## 📜 License
+
+Licensed under the **Apache License 2.0** — see [`LICENSE`](LICENSE).
 
 ---
 
 <div align="center">
-<sub>Built in the open. Cultivated commit by commit.</sub>
+<sub>Built in the open. Cultivated commit by commit. 🎒</sub>
 </div>

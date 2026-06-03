@@ -1,0 +1,52 @@
+name: 🐛 Bug report
+description: Report something that isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report!
+        For security-sensitive issues, please use the Security policy instead of a public issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: false
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version (Agent)
+      placeholder: "e.g. 14.5"
+  - type: input
+    id: ios
+    attributes:
+      label: iOS/iPadOS version (Client)
+      placeholder: "e.g. 17.5"
+  - type: input
+    id: version
+    attributes:
+      label: Commit / version
+      placeholder: "e.g. main @ abc1234"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      render: shell
