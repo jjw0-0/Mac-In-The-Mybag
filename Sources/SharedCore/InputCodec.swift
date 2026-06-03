@@ -120,6 +120,11 @@ extension Array where Element == UInt8 {
             append(UInt8(truncatingIfNeeded: v >> UInt64(shift)))
         }
     }
+    mutating func appendUUID(_ uuid: UUID) {
+        let u = uuid.uuid
+        append(contentsOf: [u.0, u.1, u.2, u.3, u.4, u.5, u.6, u.7,
+                            u.8, u.9, u.10, u.11, u.12, u.13, u.14, u.15])
+    }
 }
 
 /// Sequential big-endian reader that throws on underflow.
@@ -154,5 +159,15 @@ struct ByteReader {
         var value: UInt64 = 0
         for i in 0..<8 { value = (value << 8) | UInt64(bytes[offset + i]) }
         return value
+    }
+    mutating func take(_ count: Int) throws -> [UInt8] {
+        guard count >= 0, offset + count <= bytes.count else { throw InputCodecError.truncated }
+        defer { offset += count }
+        return Array(bytes[offset ..< offset + count])
+    }
+    mutating func uuid() throws -> UUID {
+        let b = try take(16)
+        return UUID(uuid: (b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
+                           b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]))
     }
 }
