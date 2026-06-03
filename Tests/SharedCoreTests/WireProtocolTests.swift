@@ -18,6 +18,7 @@ final class WireProtocolTests: XCTestCase {
         try roundtrip(.requestKeyframe)
         try roundtrip(.setQuality(StreamQuality(fps: 30, resolutionScale: 0.75, codec: .h264, prioritizeInput: false)))
         try roundtrip(.resume(sessionToken: 7, lastInputSequence: 123))
+        try roundtrip(.videoFormat(sps: [0x67, 0x42, 0x00], pps: [0x68, 0xCE]))
         try roundtrip(.bye)
     }
 

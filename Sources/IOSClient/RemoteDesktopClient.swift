@@ -20,6 +20,11 @@ public final class RemoteDesktopClient {
         self.deviceID = deviceID
         session = ClientSession(transport: transport)
         session.onState = { [weak self] state in self?.onState?(state) }
+        session.onControl = { [weak self] control in
+            if case .videoFormat(let sps, let pps) = control {
+                self?.decoder.setParameterSets(sps: Data(sps), pps: Data(pps))
+            }
+        }
         session.onVideoFrame = { [weak self] header, payload in
             guard let self else { return }
             if let sampleBuffer = self.decoder.sampleBuffer(forFrame: Data(payload),

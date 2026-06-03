@@ -16,6 +16,7 @@ public enum ControlMessage: Equatable, Sendable {
     case requestKeyframe
     case setQuality(StreamQuality)
     case resume(sessionToken: UInt64, lastInputSequence: UInt64)
+    case videoFormat(sps: [UInt8], pps: [UInt8])
     case bye
 }
 
@@ -43,6 +44,10 @@ public enum ControlCodec {
             out.append(q.prioritizeInput ? 1 : 0)
         case .resume(let token, let seq):
             out.append(7); out.appendBE(token); out.appendBE(seq)
+        case .videoFormat(let sps, let pps):
+            out.append(9)
+            out.appendBE(UInt32(truncatingIfNeeded: sps.count)); out.append(contentsOf: sps)
+            out.appendBE(UInt32(truncatingIfNeeded: pps.count)); out.append(contentsOf: pps)
         case .bye:
             out.append(8)
         }
@@ -68,6 +73,10 @@ public enum ControlCodec {
                                                 codec: codec, prioritizeInput: prioritize))
         case 7: message = .resume(sessionToken: try reader.u64(), lastInputSequence: try reader.u64())
         case 8: message = .bye
+        case 9:
+            let spsLength = Int(try reader.u32()); let sps = try reader.take(spsLength)
+            let ppsLength = Int(try reader.u32()); let pps = try reader.take(ppsLength)
+            message = .videoFormat(sps: sps, pps: pps)
         default: throw InputCodecError.unknownEventType(tag)
         }
         guard reader.atEnd else { throw InputCodecError.trailingBytes }

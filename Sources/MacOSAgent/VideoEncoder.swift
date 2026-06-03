@@ -12,6 +12,11 @@ public final class VideoEncoder {
     /// Called for each encoded frame with its framing header and compressed bytes.
     public var onEncodedFrame: ((VideoFrameHeader, Data) -> Void)?
 
+    /// Called once with the H.264 parameter sets (SPS, PPS) when they first become available,
+    /// so the client can build its decoder format description.
+    public var onParameterSets: ((Data, Data) -> Void)?
+    private var sentParameterSets = false
+
     private var session: VTCompressionSession?
     private let width: Int32
     private let height: Int32
@@ -70,6 +75,14 @@ public final class VideoEncoder {
               let dataPointer else { return }
 
         let data = Data(bytes: dataPointer, count: totalLength)
+
+        if !sentParameterSets,
+           let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer),
+           let (sps, pps) = Self.parameterSets(from: formatDescription) {
+            sentParameterSets = true
+            onParameterSets?(sps, pps)
+        }
+
         sequence &+= 1
         let seconds = pts.seconds
         let ptsMicros = seconds.isFinite ? UInt64(max(0, seconds * 1_000_000)) : 0
@@ -88,6 +101,25 @@ public final class VideoEncoder {
               let first = attachments.first else { return true }
         let notSync = (first[kCMSampleAttachmentKey_NotSync] as? Bool) ?? false
         return !notSync
+    }
+
+    static func parameterSets(from formatDescription: CMFormatDescription) -> (sps: Data, pps: Data)? {
+        var spsPointer: UnsafePointer<UInt8>?
+        var spsSize = 0
+        var count = 0
+        let s0 = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(
+            formatDescription, parameterSetIndex: 0,
+            parameterSetPointerOut: &spsPointer, parameterSetSizeOut: &spsSize,
+            parameterSetCountOut: &count, nalUnitHeaderLengthOut: nil)
+        var ppsPointer: UnsafePointer<UInt8>?
+        var ppsSize = 0
+        let s1 = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(
+            formatDescription, parameterSetIndex: 1,
+            parameterSetPointerOut: &ppsPointer, parameterSetSizeOut: &ppsSize,
+            parameterSetCountOut: nil, nalUnitHeaderLengthOut: nil)
+        guard s0 == noErr, s1 == noErr, count >= 2,
+              let spsPointer, let ppsPointer else { return nil }
+        return (Data(bytes: spsPointer, count: spsSize), Data(bytes: ppsPointer, count: ppsSize))
     }
 }
 #endif

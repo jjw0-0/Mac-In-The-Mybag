@@ -44,6 +44,9 @@ public final class Agent: ScreenCapturerDelegate, @unchecked Sendable {
             packet.append(contentsOf: data)
             self?.transport.send(.video, packet)
         }
+        encoder.onParameterSets = { [weak self] sps, pps in
+            self?.transport.send(.control, ControlCodec.encode(.videoFormat(sps: [UInt8](sps), pps: [UInt8](pps))))
+        }
         self.encoder = encoder
 
         capturer.delegate = self
