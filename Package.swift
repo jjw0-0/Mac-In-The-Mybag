@@ -10,6 +10,7 @@ let package = Package(
         .library(name: "SharedCore", targets: ["SharedCore"]),
         .library(name: "MacOSAgent", targets: ["MacOSAgent"]),
         .library(name: "IOSClient", targets: ["IOSClient"]),
+        .executable(name: "mitm-agent", targets: ["mitm-agent"]),
     ],
     targets: [
         // 플랫폼 무관 순수 로직 — UT 집중
@@ -25,5 +26,7 @@ let package = Package(
         .target(name: "IOSClient", dependencies: ["SharedCore"]),
         .testTarget(name: "SharedCoreTests", dependencies: ["SharedCore"]),
         .testTarget(name: "MacOSAgentTests", dependencies: ["MacOSAgent"]),
+        // Runnable macOS agent (CLI)
+        .executableTarget(name: "mitm-agent", dependencies: ["MacOSAgent", "SharedCore"]),
     ]
 )
