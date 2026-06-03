@@ -131,7 +131,7 @@ swift test       # runs the SharedCore unit suite
 - ✅ **Kill-gate PoC passed** — lid-closed capture continuity validated (`CGVirtualDisplay`, 99.97 %, ≥ 34 fps)
 - ✅ **All 10 architecture decision gates resolved** — transport, security, thermal, scope, coordinates
 - ✅ **`H2` package scaffold builds & tests green** — `SharedCore` coordinate mapping + connection state machine under test
-- ✅ `DisplayProvider` extracted (`CGVirtualDisplayProvider`) — 🔜 input codec → L2 latency harness → main pipeline
+- ✅ `DisplayProvider` + input codec / replay defense — 🔜 L2 latency harness → QUIC transport → main pipeline
 
 ## 🗺 Roadmap
 
@@ -139,7 +139,7 @@ swift test       # runs the SharedCore unit suite
 - [x] Architecture decision gates (DG-1 … DG-10)
 - [x] `H2` package scaffold (`SharedCore` / `MacOSAgent` / `IOSClient`)
 - [x] `CGVirtualDisplayProvider` — production capture-surface provider
-- [ ] Input event codec + monotonic sequence (replay defense)
+- [x] Input event codec + monotonic sequence (replay defense)
 - [ ] Adaptive bitrate ladder + hysteresis
 - [ ] L2 instrumentation harness (end-to-end latency)
 - [ ] QUIC transport + QR/ECDH pairing
