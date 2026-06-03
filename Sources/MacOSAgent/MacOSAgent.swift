@@ -15,6 +15,6 @@ import SharedCore
 /// G-Sleep 경로 (iii). `DisplayProvider` 구체 구현(CGVirtualDisplayProvider)이
 /// 다음 단계에서 이 타깃에 들어온다(kill_gate_poc에서 격리 추출).
 public enum MacOSAgent {
-    public static let version = SharedCore.version
+    public static let version = CoreInfo.version
 }
 #endif
