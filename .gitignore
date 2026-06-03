@@ -1,0 +1,21 @@
+# Swift / SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+DerivedData/
+
+# Xcode user data
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+
+# macOS
+.DS_Store
+
+# 로컬 도구/작업 상태 — 저장소 미추적
+.claude/
+.omc/
+.omx/
+
+# DG-0 PoC — CGVirtualDisplay 참조 구현. CGVirtualDisplayProvider 추출 후 제거 예정. 저장소 미추적.
+kill_gate_poc/
