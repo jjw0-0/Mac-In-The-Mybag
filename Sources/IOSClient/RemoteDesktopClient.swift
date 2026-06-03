@@ -10,6 +10,9 @@ public final class RemoteDesktopClient {
     private let session: ClientSession
     private let decoder = VideoStreamDecoder()
     private let deviceID: UUID
+    private var host = ""
+    private var port: UInt16 = 7000
+    private var reconnection = ReconnectionController()
 
     /// Called on the transport queue with each decoded sample buffer (enqueue into the view).
     public var onSampleBuffer: ((CMSampleBuffer) -> Void)?
@@ -19,7 +22,15 @@ public final class RemoteDesktopClient {
     public init(deviceID: UUID = UUID()) {
         self.deviceID = deviceID
         session = ClientSession(transport: transport)
-        session.onState = { [weak self] state in self?.onState?(state) }
+        session.onState = { [weak self] state in
+            guard let self else { return }
+            self.onState?(state)
+            switch state {
+            case .ready:  self.reconnection.reset()
+            case .failed: self.scheduleReconnect()
+            default:      break
+            }
+        }
         session.onControl = { [weak self] control in
             if case .videoFormat(let sps, let pps) = control {
                 self?.decoder.setParameterSets(sps: Data(sps), pps: Data(pps))
@@ -39,8 +50,19 @@ public final class RemoteDesktopClient {
     }
 
     public func connect(host: String, port: UInt16 = 7000) {
+        self.host = host
+        self.port = port
+        reconnection.reset()
         transport.connect(host: host, port: port)
         session.sendHello(deviceID: deviceID)
+    }
+
+    private func scheduleReconnect() {
+        guard let delay = reconnection.nextDelay() else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self else { return }
+            self.transport.connect(host: self.host, port: self.port)
+        }
     }
 
     public func send(gesture: Gesture) { session.send(gesture: gesture) }
