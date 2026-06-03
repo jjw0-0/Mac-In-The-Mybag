@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build-test:
-    name: Build & Test
+    name: Build & Test (macOS)
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -23,5 +23,19 @@ jobs:
       - name: Build (all targets)
         run: swift build
 
-      - name: Test (SharedCore)
+      - name: Test (SharedCore + MacOSAgent)
         run: swift test
+
+  ios-build:
+    name: Build (iOS Simulator)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build IOSClient for iOS Simulator
+        run: >
+          xcodebuild
+          -scheme IOSClient
+          -destination 'generic/platform=iOS Simulator'
+          build
+          CODE_SIGNING_ALLOWED=NO

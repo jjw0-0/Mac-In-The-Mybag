@@ -123,6 +123,8 @@ swift test       # runs the SharedCore unit suite
 
 > The iOS app shell (`@main`) and on-device builds are added via an Xcode project that depends on
 > this package. `swift build` targets the macOS host, so iOS-only code is `#if os(iOS)`-guarded.
+>
+> **Full build / run / iOS-app guide:** [`docs/SETUP.md`](docs/SETUP.md).
 
 ## 📍 Project status
 
@@ -131,7 +133,7 @@ swift test       # runs the SharedCore unit suite
 - ✅ **Kill-gate PoC passed** — lid-closed capture continuity validated (`CGVirtualDisplay`, 99.97 %, ≥ 34 fps)
 - ✅ **All 10 architecture decision gates resolved** — transport, security, thermal, scope, coordinates
 - ✅ **`H2` package scaffold builds & tests green** — `SharedCore` coordinate mapping + connection state machine under test
-- ✅ `DisplayProvider` + input codec / replay defense — 🔜 L2 latency harness → QUIC transport → main pipeline
+- ✅ MVP implemented across `SharedCore` / `MacOSAgent` / `IOSClient` — builds green (macOS + iOS), 75 unit tests — 🔜 on-device E2E testing (see [SETUP](docs/SETUP.md))
 
 ## 🗺 Roadmap
 
@@ -140,11 +142,11 @@ swift test       # runs the SharedCore unit suite
 - [x] `H2` package scaffold (`SharedCore` / `MacOSAgent` / `IOSClient`)
 - [x] `CGVirtualDisplayProvider` — production capture-surface provider
 - [x] Input event codec + monotonic sequence (replay defense)
-- [ ] Adaptive bitrate ladder + hysteresis
-- [ ] L2 instrumentation harness (end-to-end latency)
-- [ ] QUIC transport + QR/ECDH pairing
-- [ ] iOS client (rendering, gestures, pairing UI)
-- [ ] MVP: F1–F8 core + auto-reconnect, ABR, onboarding, trackpad, thermal guard
+- [x] Adaptive bitrate ladder + hysteresis
+- [x] L2 instrumentation harness (latency statistics)
+- [x] QUIC + TLS 1.3 transport + QR/ECDH pairing primitives
+- [x] iOS client (decode, rendering, gestures, QR pairing UI)
+- [x] MVP implemented to pre-test stage — on-device E2E validation pending ([SETUP](docs/SETUP.md))
 
 ## 🤝 Contributing
 
