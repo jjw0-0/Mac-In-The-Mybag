@@ -31,11 +31,21 @@ public final class RemoteDesktopModel: ObservableObject {
     public func handleScannedCode(_ code: String) {
         guard let payload = PairingPayload.from(qrString: code),
               let hint = payload.connectionHints.first else { return }
-
         let pieces = hint.split(separator: ":")
         let host = String(pieces.first ?? "")
         let port = pieces.count > 1 ? (UInt16(pieces[1]) ?? 7000) : 7000
+        connectManually(host: host, port: port)
+    }
 
+    /// Connects directly to a host/port (manual entry; bypasses QR).
+    public func connectManually(host: String, port: UInt16) {
+        guard !host.isEmpty else { return }
+        let client = makeClient()
+        client.connect(host: host, port: port)
+        self.client = client
+    }
+
+    private func makeClient() -> RemoteDesktopClient {
         let client = RemoteDesktopClient()
         client.onSampleBuffer = { [weak self] sampleBuffer in
             DispatchQueue.main.async { self?.screenView?.enqueue(sampleBuffer) }
@@ -43,8 +53,7 @@ public final class RemoteDesktopModel: ObservableObject {
         client.onState = { [weak self] state in
             DispatchQueue.main.async { self?.isConnected = (state == .ready) }
         }
-        client.connect(host: host, port: port)
-        self.client = client
+        return client
     }
 }
 
@@ -52,6 +61,8 @@ public final class RemoteDesktopModel: ObservableObject {
 /// trackpad overlay. Embed this in an iOS app target.
 public struct RemoteDesktopView: View {
     @StateObject private var model = RemoteDesktopModel()
+    @State private var host = ""
+    @State private var portText = "7000"
 
     public init() {}
 
@@ -65,12 +76,28 @@ public struct RemoteDesktopView: View {
             } else {
                 QRScannerView { code in model.handleScannedCode(code) }
                     .ignoresSafeArea()
-                VStack {
+                VStack(spacing: 16) {
                     Spacer()
                     Text("Scan the pairing QR shown on your Mac")
-                        .padding()
+                        .padding(.horizontal, 16).padding(.vertical, 10)
                         .background(.ultraThinMaterial, in: Capsule())
-                        .padding(.bottom, 48)
+                    HStack(spacing: 8) {
+                        TextField("host", text: $host)
+                            .textFieldStyle(.roundedBorder)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                        TextField("port", text: $portText)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 72)
+                        Button("Connect") {
+                            model.connectManually(host: host, port: UInt16(portText) ?? 7000)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 32)
                 }
             }
         }
