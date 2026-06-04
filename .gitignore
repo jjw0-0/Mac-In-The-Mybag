@@ -19,3 +19,9 @@ xcuserdata/
 
 # DG-0 PoC — CGVirtualDisplay 참조 구현. CGVirtualDisplayProvider 추출 후 제거 예정. 저장소 미추적.
 kill_gate_poc/
+
+# 로컬 iOS 앱 셸 (사용자 소유 Xcode 프로젝트) — 저장소 미추적, 로컬에만 보존
+Mac In The Myphone/
+
+# 사용된 적 없는 xcodegen 스캐폴드 — 제거됨
+apps/
