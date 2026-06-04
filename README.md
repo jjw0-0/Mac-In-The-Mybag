@@ -16,7 +16,14 @@ over your phone's hotspot, low-latency, while you're on the move.*
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![Swift](https://img.shields.io/badge/Swift-5.9+-fa7343?style=for-the-badge&logo=swift&logoColor=white)](Package.swift)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013+%20·%20iOS%2016+-0a84ff?style=for-the-badge&logo=apple&logoColor=white)](#-build)
-[![Stars](https://img.shields.io/github/stars/jjw0-0/Mac-In-The-Myphone?style=for-the-badge&logo=github&color=f5c518)](https://github.com/jjw0-0/Mac-In-The-Myphone/stargazers)
+
+<br/>
+
+<a href="https://github.com/jjw0-0/Mac-In-The-Myphone/stargazers">
+  <img src="https://img.shields.io/github/stars/jjw0-0/Mac-In-The-Myphone?style=for-the-badge&logo=github&logoColor=white&label=STARS&labelColor=0d1117&color=f5c518" height="46" alt="Star Mac-In-The-Myphone on GitHub">
+</a>
+
+<sub><i>↑ if this idea speaks to you, drop a star — it's how a pre-alpha finds its people</i></sub>
 
 </div>
 
@@ -28,7 +35,7 @@ over your phone's hotspot, low-latency, while you're on the move.*
 
 ## Why the name?
 
-**M**ac-**I**n-**T**he-**M**ybag. The wink at *Man-In-The-Middle* is the whole point: the only thing
+**M**ac-**I**n-**T**he-**M**yphone. The wink at *Man-In-The-Middle* is the whole point: the only thing
 allowed between your phone and your Mac is **you**. Pairing is bootstrapped **out-of-band** through a
 QR code carrying an ECDH public-key fingerprint, and every byte rides **TLS 1.3** with downgrade
 refused — so an actual man-in-the-middle walks away with nothing.
@@ -68,24 +75,31 @@ interaction designed for movement.
 
 ## 🏗 Architecture
 
-A single Swift package, three targets (`H2` — separated targets over a shared core):
+**One Swift package, three targets.** `MacOSAgent` captures and serves the screen; `IOSClient` decodes it and sends your touches back; **`SharedCore`** is the contract both obey — wire protocol, binary codecs, coordinate mapping, the connection state machine. Each end depends only on `SharedCore`, never on the other.
 
 ```mermaid
 flowchart LR
-  subgraph Phone["📱 iPhone / iPad · IOSClient"]
-    UI["Gestures · Rendering<br/>Pairing UI · L2 harness"]
+  subgraph MAC["💻 MacBook — lid-closed, in the bag · MacOSAgent"]
+    direction TB
+    VD["🖥 CGVirtualDisplay<br/>keeps a screen alive, lid shut"]
+    ENC["🎞 ScreenCaptureKit + VideoToolbox<br/>capture → H.264"]
+    INJ["🖱 CGEvent<br/>synthetic input"]
+    VD --> ENC
   end
-  subgraph Mac["💻 MacBook in the bag · MacOSAgent"]
-    CAP["SCK + VideoToolbox<br/>capture & encode"]
-    INJ["CGEvent<br/>input injection"]
-    VD["CGVirtualDisplay<br/>lid-closed surface"]
+
+  subgraph PHONE["📱 iPhone / iPad · IOSClient"]
+    direction TB
+    DEC["🎬 VideoToolbox decode<br/>→ AVSampleBufferDisplayLayer"]
+    GES["👆 Trackpad gestures<br/>tap · scroll · pinch · type"]
   end
-  Core(["🧩 SharedCore<br/>protocols · codecs<br/>state machine · coordinates"])
-  Phone == "input events" ==> Mac
-  Mac == "H.264 over QUIC · TLS 1.3" ==> Phone
-  Phone -.depends on.-> Core
-  Mac -.depends on.-> Core
+
+  ENC ==>|"① live screen — H.264 / QUIC · TLS 1.3"| DEC
+  GES ==>|"② your touches — QUIC · TLS 1.3"| INJ
 ```
+
+<div align="center"><sub><b>①</b> video streams Mac → phone &nbsp;·&nbsp; <b>②</b> input flows phone → Mac &nbsp;·&nbsp; both ride <b>one</b> encrypted QUIC / TLS 1.3 session</sub></div>
+
+### Key decisions
 
 | Layer | Decision |
 |---|---|
