@@ -17,15 +17,21 @@ public final class NWTransport: Transport, @unchecked Sendable {
     public init() {}
 
     /// Starts listening (agent role). `serviceName`, if set, advertises over Bonjour.
-    public func listen(port: UInt16, serviceName: String? = nil) throws {
-        let listener = try NWListener(using: Self.parameters(),
+    public func listen(port: UInt16, serviceName: String? = nil, identity: sec_identity_t? = nil) throws {
+        let listener = try NWListener(using: Self.parameters(identity: identity),
                                       on: NWEndpoint.Port(rawValue: port) ?? .any)
         if let serviceName {
             listener.service = NWListener.Service(name: serviceName, type: "_mitm._udp")
         }
         listener.newConnectionHandler = { [weak self] connection in self?.adopt(connection) }
         listener.stateUpdateHandler = { [weak self] state in
-            if case .failed = state { self?.onStateChange?(.failed) }
+            switch state {
+            case .failed(let error), .waiting(let error):
+                FileHandle.standardError.write(Data("listener \(state): \(error)\n".utf8))
+                self?.onStateChange?(.failed)
+            default:
+                FileHandle.standardError.write(Data("listener: \(state)\n".utf8))
+            }
         }
         listener.start(queue: queue)
         self.listener = listener
@@ -35,7 +41,7 @@ public final class NWTransport: Transport, @unchecked Sendable {
     public func connect(host: String, port: UInt16) {
         let connection = NWConnection(host: NWEndpoint.Host(host),
                                       port: NWEndpoint.Port(rawValue: port) ?? .any,
-                                      using: Self.parameters())
+                                      using: Self.parameters(identity: nil))
         adopt(connection)
     }
 
@@ -61,11 +67,17 @@ public final class NWTransport: Transport, @unchecked Sendable {
 
     private func map(_ state: NWConnection.State) {
         switch state {
-        case .ready:               onStateChange?(.ready)
-        case .failed, .waiting:    onStateChange?(.failed)
-        case .cancelled:           onStateChange?(.cancelled)
-        case .setup, .preparing:   onStateChange?(.setup)
-        @unknown default:          break
+        case .ready:
+            onStateChange?(.ready)
+        case .failed(let error), .waiting(let error):
+            FileHandle.standardError.write(Data("connection \(state): \(error)\n".utf8))
+            onStateChange?(.failed)
+        case .cancelled:
+            onStateChange?(.cancelled)
+        case .setup, .preparing:
+            onStateChange?(.setup)
+        @unknown default:
+            break
         }
     }
 
@@ -82,17 +94,20 @@ public final class NWTransport: Transport, @unchecked Sendable {
         }
     }
 
-    private static func parameters() -> NWParameters {
+    private static func parameters(identity: sec_identity_t?) -> NWParameters {
+        // A2 QUIC + TLS 1.3 (DG-2). The server (listener) presents a self-signed identity;
+        // the client accepts it (real authentication is layered on via ECDH pairing, DG-3).
         let quic = NWProtocolQUIC.Options(alpn: ["mitm-v1"])
         let security = quic.securityProtocolOptions
         sec_protocol_options_set_min_tls_protocol_version(security, .TLSv13)
 
-        // Pre-shared key so the TLS 1.3 handshake completes without a server certificate
-        // (symmetric: both listener and client use the same PSK).
-        // TODO: derive this from the ECDH pairing secret instead of a fixed dev key (DG-3).
-        let psk = Data("mitm-dev-psk-v1".utf8).withUnsafeBytes { DispatchData(bytes: $0) }
-        let pskIdentity = Data("mitm".utf8).withUnsafeBytes { DispatchData(bytes: $0) }
-        sec_protocol_options_add_pre_shared_key(security, psk as __DispatchData, pskIdentity as __DispatchData)
+        if let identity {
+            sec_protocol_options_set_local_identity(security, identity)   // server role
+        } else {
+            // client role: accept the dev self-signed certificate
+            sec_protocol_options_set_verify_block(security, { _, _, complete in complete(true) },
+                                                  DispatchQueue.global())
+        }
 
         let parameters = NWParameters(quic: quic)
         parameters.allowLocalEndpointReuse = true

@@ -41,7 +41,11 @@ public final class Agent: ScreenCapturerDelegate, @unchecked Sendable {
         }
 
         // Listen FIRST so the agent is reachable even if the capture pipeline isn't ready.
-        try transport.listen(port: port, serviceName: "Mac-In-The-Mybag")
+        let identity = ServerIdentity.loadOrCreate()
+        if identity == nil {
+            FileHandle.standardError.write(Data("warning: no TLS identity — clients can't complete the handshake\n".utf8))
+        }
+        try transport.listen(port: port, serviceName: "Mac-In-The-Mybag", identity: identity)
 
         // Capture pipeline — non-fatal: failures (e.g. missing Screen Recording permission)
         // are logged but do not stop the agent from accepting connections.
