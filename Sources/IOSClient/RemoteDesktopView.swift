@@ -20,6 +20,7 @@ public struct GestureOverlay: UIViewRepresentable {
 @MainActor
 public final class RemoteDesktopModel: ObservableObject {
     @Published public var isConnected = false
+    @Published public var status: String = ""
     public private(set) var client: RemoteDesktopClient?
     private weak var screenView: SampleBufferView?
 
@@ -37,11 +38,20 @@ public final class RemoteDesktopModel: ObservableObject {
         connectManually(host: host, port: port)
     }
 
-    /// Connects directly to a host/port (manual entry; bypasses QR).
-    public func connectManually(host: String, port: UInt16) {
-        guard !host.isEmpty else { return }
+    /// Connects directly to a host/port (manual entry; bypasses QR). Tolerates an
+    /// "ip:port" string pasted into the host field.
+    public func connectManually(host rawHost: String, port: UInt16) {
+        var host = rawHost.trimmingCharacters(in: .whitespaces)
+        var resolvedPort = port
+        if let colon = host.lastIndex(of: ":"),
+           let parsed = UInt16(host[host.index(after: colon)...]) {
+            resolvedPort = parsed
+            host = String(host[..<colon])
+        }
+        guard !host.isEmpty else { status = "Enter a host (e.g. 192.168.0.12)"; return }
+        status = "Connecting to \(host):\(resolvedPort)…"
         let client = makeClient()
-        client.connect(host: host, port: port)
+        client.connect(host: host, port: resolvedPort)
         self.client = client
     }
 
@@ -51,7 +61,15 @@ public final class RemoteDesktopModel: ObservableObject {
             DispatchQueue.main.async { self?.screenView?.enqueue(sampleBuffer) }
         }
         client.onState = { [weak self] state in
-            DispatchQueue.main.async { self?.isConnected = (state == .ready) }
+            DispatchQueue.main.async {
+                self?.isConnected = (state == .ready)
+                switch state {
+                case .ready:     self?.status = "Connected"
+                case .failed:    self?.status = "Connection failed — check IP / Wi-Fi / agent"
+                case .cancelled: self?.status = "Disconnected"
+                case .setup:     self?.status = "Connecting…"
+                }
+            }
         }
         return client
     }
@@ -81,6 +99,13 @@ public struct RemoteDesktopView: View {
                     Text("Scan the pairing QR shown on your Mac")
                         .padding(.horizontal, 16).padding(.vertical, 10)
                         .background(.ultraThinMaterial, in: Capsule())
+                    if !model.status.isEmpty {
+                        Text(model.status)
+                            .font(.footnote)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .background(.ultraThinMaterial, in: Capsule())
+                    }
                     HStack(spacing: 8) {
                         TextField("host", text: $host)
                             .textFieldStyle(.roundedBorder)

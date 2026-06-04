@@ -33,27 +33,38 @@ public final class Agent: ScreenCapturerDelegate, @unchecked Sendable {
 
     public func start(width: Int = 1920, height: Int = 1080, fps: Int = 60) async throws {
         wake.begin()
-
-        let handle = try displayProvider.makeDisplay(width: width, height: height, refreshHz: Double(fps))
-        displayHandle = handle
         bounds = CGRect(x: 0, y: 0, width: width, height: height)
 
-        let encoder = try VideoEncoder(width: width, height: height, codec: abr.quality.codec, fps: fps)
-        encoder.onEncodedFrame = { [weak self] header, data in
-            var packet = header.encoded()
-            packet.append(contentsOf: data)
-            self?.transport.send(.video, packet)
-        }
-        encoder.onParameterSets = { [weak self] sps, pps in
-            self?.transport.send(.control, ControlCodec.encode(.videoFormat(sps: [UInt8](sps), pps: [UInt8](pps))))
-        }
-        self.encoder = encoder
-
-        capturer.delegate = self
         transport.onReceive = { [weak self] message in self?.handle(message) }
+        transport.onStateChange = { state in
+            FileHandle.standardError.write(Data("transport: \(state)\n".utf8))
+        }
 
-        try await capturer.start(displayID: handle.displayID, width: width, height: height, fps: fps)
+        // Listen FIRST so the agent is reachable even if the capture pipeline isn't ready.
         try transport.listen(port: port, serviceName: "Mac-In-The-Mybag")
+
+        // Capture pipeline — non-fatal: failures (e.g. missing Screen Recording permission)
+        // are logged but do not stop the agent from accepting connections.
+        do {
+            let handle = try displayProvider.makeDisplay(width: width, height: height, refreshHz: Double(fps))
+            displayHandle = handle
+
+            let encoder = try VideoEncoder(width: width, height: height, codec: abr.quality.codec, fps: fps)
+            encoder.onEncodedFrame = { [weak self] header, data in
+                var packet = header.encoded()
+                packet.append(contentsOf: data)
+                self?.transport.send(.video, packet)
+            }
+            encoder.onParameterSets = { [weak self] sps, pps in
+                self?.transport.send(.control, ControlCodec.encode(.videoFormat(sps: [UInt8](sps), pps: [UInt8](pps))))
+            }
+            self.encoder = encoder
+
+            capturer.delegate = self
+            try await capturer.start(displayID: handle.displayID, width: width, height: height, fps: fps)
+        } catch {
+            FileHandle.standardError.write(Data("capture unavailable (agent still listening): \(error)\n".utf8))
+        }
     }
 
     public func stop() async {

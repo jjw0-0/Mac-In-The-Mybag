@@ -84,7 +84,16 @@ public final class NWTransport: Transport, @unchecked Sendable {
 
     private static func parameters() -> NWParameters {
         let quic = NWProtocolQUIC.Options(alpn: ["mitm-v1"])
-        sec_protocol_options_set_min_tls_protocol_version(quic.securityProtocolOptions, .TLSv13)
+        let security = quic.securityProtocolOptions
+        sec_protocol_options_set_min_tls_protocol_version(security, .TLSv13)
+
+        // Pre-shared key so the TLS 1.3 handshake completes without a server certificate
+        // (symmetric: both listener and client use the same PSK).
+        // TODO: derive this from the ECDH pairing secret instead of a fixed dev key (DG-3).
+        let psk = Data("mitm-dev-psk-v1".utf8).withUnsafeBytes { DispatchData(bytes: $0) }
+        let pskIdentity = Data("mitm".utf8).withUnsafeBytes { DispatchData(bytes: $0) }
+        sec_protocol_options_add_pre_shared_key(security, psk as __DispatchData, pskIdentity as __DispatchData)
+
         let parameters = NWParameters(quic: quic)
         parameters.allowLocalEndpointReuse = true
         return parameters
