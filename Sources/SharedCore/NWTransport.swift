@@ -63,7 +63,16 @@ public final class NWTransport: Transport, @unchecked Sendable {
 
     private func adopt(_ connection: NWConnection) {
         self.connection = connection
-        connection.stateUpdateHandler = { [weak self] state in self?.map(state) }
+        connection.stateUpdateHandler = { [weak self] state in
+            guard let self else { return }
+            switch state {
+            case .failed, .cancelled:
+                if self.connection === connection { self.connection = nil }
+            default:
+                break
+            }
+            self.map(state)
+        }
         receiveLoop(connection)
         connection.start(queue: queue)
     }

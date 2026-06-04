@@ -36,8 +36,15 @@ public final class Agent: ScreenCapturerDelegate, @unchecked Sendable {
         bounds = CGRect(x: 0, y: 0, width: width, height: height)
 
         transport.onReceive = { [weak self] message in self?.handle(message) }
-        transport.onStateChange = { state in
+        transport.onStateChange = { [weak self] state in
             FileHandle.standardError.write(Data("transport: \(state)\n".utf8))
+            // A (re)connected client needs the parameter sets + a keyframe to decode.
+            if state == .ready {
+                if let sets = self?.encoder?.lastParameterSets {
+                    self?.transport.send(.control, ControlCodec.encode(.videoFormat(sps: [UInt8](sets.sps), pps: [UInt8](sets.pps))))
+                }
+                self?.forceNextKeyframe = true
+            }
         }
 
         // Listen FIRST so the agent is reachable even if the capture pipeline isn't ready.
@@ -53,7 +60,9 @@ public final class Agent: ScreenCapturerDelegate, @unchecked Sendable {
             let handle = try displayProvider.makeDisplay(width: width, height: height, refreshHz: Double(fps))
             displayHandle = handle
 
-            let encoder = try VideoEncoder(width: width, height: height, codec: abr.quality.codec, fps: fps)
+            // H.264 is the default (DG-5); H.265 is a conditional promotion wired later.
+            // The client decoder is H.264, so the parameter sets must match.
+            let encoder = try VideoEncoder(width: width, height: height, codec: .h264, fps: fps)
             encoder.onEncodedFrame = { [weak self] header, data in
                 var packet = header.encoded()
                 packet.append(contentsOf: data)

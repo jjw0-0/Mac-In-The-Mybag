@@ -15,7 +15,10 @@ public final class VideoEncoder {
     /// Called once with the H.264 parameter sets (SPS, PPS) when they first become available,
     /// so the client can build its decoder format description.
     public var onParameterSets: ((Data, Data) -> Void)?
-    private var sentParameterSets = false
+
+    /// The most recent H.264 parameter sets, cached so a newly-connected client can be sent
+    /// them immediately without waiting to re-extract on the next keyframe.
+    public private(set) var lastParameterSets: (sps: Data, pps: Data)?
 
     private var session: VTCompressionSession?
     private let width: Int32
@@ -76,10 +79,10 @@ public final class VideoEncoder {
 
         let data = Data(bytes: dataPointer, count: totalLength)
 
-        if !sentParameterSets,
+        if lastParameterSets == nil,
            let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer),
            let (sps, pps) = Self.parameterSets(from: formatDescription) {
-            sentParameterSets = true
+            lastParameterSets = (sps, pps)
             onParameterSets?(sps, pps)
         }
 
