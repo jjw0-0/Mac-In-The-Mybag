@@ -1,6 +1,7 @@
 #if canImport(UIKit)
 import Foundation
 import CoreMedia
+import Network
 import SharedCore
 
 /// iOS client orchestrator: connects over QUIC, sends gestures as input, and turns
@@ -12,6 +13,7 @@ public final class RemoteDesktopClient {
     private let deviceID: UUID
     private var host = ""
     private var port: UInt16 = 7000
+    private var endpoint: NWEndpoint?
     private var reconnection = ReconnectionController()
 
     /// Called on the transport queue with each decoded sample buffer (enqueue into the view).
@@ -52,8 +54,17 @@ public final class RemoteDesktopClient {
     public func connect(host: String, port: UInt16 = 7000) {
         self.host = host
         self.port = port
+        self.endpoint = nil
         reconnection.reset()
         transport.connect(host: host, port: port)
+        session.sendHello(deviceID: deviceID)
+    }
+
+    /// Connects to a discovered Bonjour endpoint (no IP needed).
+    public func connect(to endpoint: NWEndpoint) {
+        self.endpoint = endpoint
+        reconnection.reset()
+        transport.connect(to: endpoint)
         session.sendHello(deviceID: deviceID)
     }
 
@@ -61,7 +72,11 @@ public final class RemoteDesktopClient {
         guard let delay = reconnection.nextDelay() else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self else { return }
-            self.transport.connect(host: self.host, port: self.port)
+            if let endpoint = self.endpoint {
+                self.transport.connect(to: endpoint)
+            } else {
+                self.transport.connect(host: self.host, port: self.port)
+            }
         }
     }
 

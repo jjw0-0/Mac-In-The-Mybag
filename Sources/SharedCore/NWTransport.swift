@@ -39,9 +39,12 @@ public final class NWTransport: Transport, @unchecked Sendable {
 
     /// Connects to a host (client role).
     public func connect(host: String, port: UInt16) {
-        let connection = NWConnection(host: NWEndpoint.Host(host),
-                                      port: NWEndpoint.Port(rawValue: port) ?? .any,
-                                      using: Self.parameters(identity: nil))
+        connect(to: .hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port) ?? .any))
+    }
+
+    /// Connects to a discovered Bonjour endpoint (no IP typing needed).
+    public func connect(to endpoint: NWEndpoint) {
+        let connection = NWConnection(to: endpoint, using: Self.parameters(identity: nil))
         adopt(connection)
     }
 

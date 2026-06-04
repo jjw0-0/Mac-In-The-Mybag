@@ -1,5 +1,6 @@
 #if canImport(UIKit)
 import SwiftUI
+import Network
 import SharedCore
 
 /// Bridges `TrackpadView` into SwiftUI.
@@ -23,10 +24,28 @@ public final class RemoteDesktopModel: ObservableObject {
     @Published public var status: String = ""
     public private(set) var client: RemoteDesktopClient?
     private weak var screenView: SampleBufferView?
+    private let discovery = Discovery()
+    @Published public var devices: [Discovery.Device] = []
 
     public init() {}
 
     public func attach(_ view: SampleBufferView) { screenView = view }
+
+    /// Starts Bonjour discovery. This also triggers the iOS Local Network permission prompt.
+    public func startDiscovery() {
+        discovery.onDevices = { [weak self] devices in
+            DispatchQueue.main.async { self?.devices = devices }
+        }
+        discovery.start()
+    }
+
+    /// Connects to a discovered agent (no IP typing needed).
+    public func connect(to device: Discovery.Device) {
+        status = "Connecting to \(device.name)…"
+        let client = makeClient()
+        client.connect(to: device.endpoint)
+        self.client = client
+    }
 
     /// Parses a scanned pairing QR and connects to the first usable connection hint.
     public func handleScannedCode(_ code: String) {
@@ -106,6 +125,18 @@ public struct RemoteDesktopView: View {
                             .padding(.horizontal, 12).padding(.vertical, 6)
                             .background(.ultraThinMaterial, in: Capsule())
                     }
+                    if !model.devices.isEmpty {
+                        VStack(spacing: 6) {
+                            Text("Found on your network").font(.caption).foregroundStyle(.secondary)
+                            ForEach(model.devices) { device in
+                                Button { model.connect(to: device) } label: {
+                                    Label(device.name, systemImage: "desktopcomputer")
+                                }
+                                .buttonStyle(.borderedProminent)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
                     HStack(spacing: 8) {
                         TextField("host", text: $host)
                             .textFieldStyle(.roundedBorder)
@@ -124,6 +155,7 @@ public struct RemoteDesktopView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 32)
                 }
+                .onAppear { model.startDiscovery() }
             }
         }
     }
