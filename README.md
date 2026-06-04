@@ -174,9 +174,11 @@ Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) and 
 
 ## ⭐ Star history
 
+<div align="center">
 <a href="https://star-history.com/#jjw0-0/Mac-In-The-Myphone&Date">
-  <img src="https://api.star-history.com/svg?repos=jjw0-0/Mac-In-The-Myphone&type=Date" alt="Star History Chart" width="600">
+  <img src="https://api.star-history.com/svg?repos=jjw0-0/Mac-In-The-Myphone&type=Date" alt="Star History Chart" width="900">
 </a>
+</div>
 
 ## 📜 License
 
