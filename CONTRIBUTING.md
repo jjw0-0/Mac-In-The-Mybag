@@ -1,4 +1,4 @@
-# Contributing to Mac-In-The-Mybag
+# Contributing to Mac-In-The-Myphone
 
 Thanks for your interest! **MITM** is pre-alpha and moving fast — bug reports, ideas, and pull
 requests are all welcome.
@@ -7,7 +7,7 @@ requests are all welcome.
 
 - Be respectful — see [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 - **Found a security issue? Do _not_ open a public issue** — follow [`SECURITY.md`](SECURITY.md).
-- For anything non-trivial, open an issue or a [Discussion](https://github.com/jjw0-0/Mac-In-The-Mybag/discussions) first so we can align before you build.
+- For anything non-trivial, open an issue or a [Discussion](https://github.com/jjw0-0/Mac-In-The-Myphone/discussions) first so we can align before you build.
 
 ## Project layout (`H2`)
 

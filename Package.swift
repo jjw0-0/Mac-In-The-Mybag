@@ -4,7 +4,7 @@ import PackageDescription
 // H2: 분리 타깃 + SharedCore (단일 Swift Package, 다중 타깃)
 // 아키텍처 개요는 루트 README.md 참조.
 let package = Package(
-    name: "MacInTheMybag",
+    name: "MacInTheMyphone",
     platforms: [.macOS(.v13), .iOS(.v16)],
     products: [
         .library(name: "SharedCore", targets: ["SharedCore"]),

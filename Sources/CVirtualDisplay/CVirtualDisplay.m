@@ -50,7 +50,7 @@ CGDirectDisplayID CVirtualDisplayCreate(const char *name, NSUInteger width, NSUI
     }
 
     CGVirtualDisplayDescriptor *descriptor = [[descriptorClass alloc] init];
-    descriptor.name              = name ? [NSString stringWithUTF8String:name] : @"Mac-In-The-Mybag";
+    descriptor.name              = name ? [NSString stringWithUTF8String:name] : @"Mac-In-The-Myphone";
     descriptor.maxPixelsWide     = width;
     descriptor.maxPixelsHigh     = height;
     descriptor.sizeInMillimeters = CGSizeMake(527, 296); // ~24" equivalent

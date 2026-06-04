@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo.svg" alt="Mac-In-The-Mybag (MITM)" width="660">
+<img src="assets/logo.svg" alt="Mac-In-The-Myphone (MITM)" width="660">
 
 ### Your MacBook lives in your bag. Drive it from your iPhone.
 
@@ -12,11 +12,11 @@ over your phone's hotspot, low-latency, while you're on the move.*
 [![English](https://img.shields.io/badge/lang-English-1f6feb?style=for-the-badge)](README.md)
 [![한국어](https://img.shields.io/badge/lang-한국어-d83a3a?style=for-the-badge)](README_KO.md)
 
-[![CI](https://img.shields.io/github/actions/workflow/status/jjw0-0/Mac-In-The-Mybag/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)](https://github.com/jjw0-0/Mac-In-The-Mybag/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/jjw0-0/Mac-In-The-Myphone/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)](https://github.com/jjw0-0/Mac-In-The-Myphone/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![Swift](https://img.shields.io/badge/Swift-5.9+-fa7343?style=for-the-badge&logo=swift&logoColor=white)](Package.swift)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013+%20·%20iOS%2016+-0a84ff?style=for-the-badge&logo=apple&logoColor=white)](#-build)
-[![Stars](https://img.shields.io/github/stars/jjw0-0/Mac-In-The-Mybag?style=for-the-badge&logo=github&color=f5c518)](https://github.com/jjw0-0/Mac-In-The-Mybag/stargazers)
+[![Stars](https://img.shields.io/github/stars/jjw0-0/Mac-In-The-Myphone?style=for-the-badge&logo=github&color=f5c518)](https://github.com/jjw0-0/Mac-In-The-Myphone/stargazers)
 
 </div>
 
@@ -115,8 +115,8 @@ We'd rather tell you up front — see [`SECURITY.md`](SECURITY.md) for the full 
 Requires Xcode 15+ / Swift 5.9+ on macOS 13+.
 
 ```sh
-git clone https://github.com/jjw0-0/Mac-In-The-Mybag.git
-cd Mac-In-The-Mybag
+git clone https://github.com/jjw0-0/Mac-In-The-Myphone.git
+cd Mac-In-The-Myphone
 swift build      # builds SharedCore + MacOSAgent (+ IOSClient; iOS code is #if os(iOS)-guarded)
 swift test       # runs the SharedCore unit suite
 ```
@@ -154,14 +154,14 @@ Contributions are welcome! Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) and 
 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) before opening a PR. Found a vulnerability? See
 [`SECURITY.md`](SECURITY.md) for responsible disclosure.
 
-- 🐛 [Report a bug](https://github.com/jjw0-0/Mac-In-The-Mybag/issues/new?template=bug_report.yml)
-- 💡 [Request a feature](https://github.com/jjw0-0/Mac-In-The-Mybag/issues/new?template=feature_request.yml)
-- 💬 [Discussions](https://github.com/jjw0-0/Mac-In-The-Mybag/discussions)
+- 🐛 [Report a bug](https://github.com/jjw0-0/Mac-In-The-Myphone/issues/new?template=bug_report.yml)
+- 💡 [Request a feature](https://github.com/jjw0-0/Mac-In-The-Myphone/issues/new?template=feature_request.yml)
+- 💬 [Discussions](https://github.com/jjw0-0/Mac-In-The-Myphone/discussions)
 
 ## ⭐ Star history
 
-<a href="https://star-history.com/#jjw0-0/Mac-In-The-Mybag&Date">
-  <img src="https://api.star-history.com/svg?repos=jjw0-0/Mac-In-The-Mybag&type=Date" alt="Star History Chart" width="600">
+<a href="https://star-history.com/#jjw0-0/Mac-In-The-Myphone&Date">
+  <img src="https://api.star-history.com/svg?repos=jjw0-0/Mac-In-The-Myphone&type=Date" alt="Star History Chart" width="600">
 </a>
 
 ## 📜 License

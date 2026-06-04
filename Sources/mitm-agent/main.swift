@@ -51,7 +51,7 @@ if let qr = TerminalQR.render(pairing.qrString()) {
 Task {
     do {
         try await agent.start()
-        print("Mac-In-The-Mybag agent listening on :\(port)")
+        print("Mac-In-The-Myphone agent listening on :\(port)")
     } catch {
         FileHandle.standardError.write(Data("agent failed to start: \(error)\n".utf8))
         exit(1)

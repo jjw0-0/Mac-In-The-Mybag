@@ -54,7 +54,7 @@ public struct ECDHKeyExchange {
     /// Derives a 256-bit symmetric key shared with the peer (HKDF-SHA256).
     public func deriveSharedKey(peerPublicKey: Data,
                                 salt: Data = Data(),
-                                info: Data = Data("Mac-In-The-Mybag/v1".utf8)) throws -> SymmetricKey {
+                                info: Data = Data("Mac-In-The-Myphone/v1".utf8)) throws -> SymmetricKey {
         let peer = try Curve25519.KeyAgreement.PublicKey(rawRepresentation: peerPublicKey)
         let secret = try privateKey.sharedSecretFromKeyAgreement(with: peer)
         return secret.hkdfDerivedSymmetricKey(using: SHA256.self,

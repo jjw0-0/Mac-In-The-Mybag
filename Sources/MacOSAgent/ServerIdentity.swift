@@ -36,7 +36,7 @@ public enum ServerIdentity {
         }
 
         guard openssl(["req", "-x509", "-newkey", "rsa:2048", "-keyout", key, "-out", cert,
-                       "-days", "3650", "-nodes", "-subj", "/CN=Mac-In-The-Mybag"]) else { return false }
+                       "-days", "3650", "-nodes", "-subj", "/CN=Mac-In-The-Myphone"]) else { return false }
         return openssl(["pkcs12", "-export", "-inkey", key, "-in", cert, "-out", p12,
                         "-passout", "pass:mitm", "-name", "mitm"])
     }

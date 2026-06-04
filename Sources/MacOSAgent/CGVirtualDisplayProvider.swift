@@ -14,7 +14,7 @@ public final class CGVirtualDisplayProvider: DisplayProvider {
     /// Display name reported to the system.
     private let name: String
 
-    public init(name: String = "Mac-In-The-Mybag") {
+    public init(name: String = "Mac-In-The-Myphone") {
         self.name = name
     }
 

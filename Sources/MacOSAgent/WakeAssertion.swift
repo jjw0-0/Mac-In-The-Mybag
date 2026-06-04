@@ -12,7 +12,7 @@ public final class WakeAssertion {
     public init() {}
 
     @discardableResult
-    public func begin(reason: String = "Mac-In-The-Mybag active session") -> Bool {
+    public func begin(reason: String = "Mac-In-The-Myphone active session") -> Bool {
         guard !active else { return true }
         var id: IOPMAssertionID = 0
         let result = IOPMAssertionCreateWithName(

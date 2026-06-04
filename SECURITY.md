@@ -14,7 +14,7 @@ seriously and appreciate responsible disclosure.
 
 **Please report privately — do _not_ open a public issue.**
 
-- Preferred: **[GitHub Private Vulnerability Reporting](https://github.com/jjw0-0/Mac-In-The-Mybag/security/advisories/new)**
+- Preferred: **[GitHub Private Vulnerability Reporting](https://github.com/jjw0-0/Mac-In-The-Myphone/security/advisories/new)**
   (repo → *Security* → *Report a vulnerability*).
 - We aim to **acknowledge within 72 hours** and to share a remediation timeline after triage.
 - Coordinated disclosure: we'll credit you in the advisory unless you prefer to remain anonymous.
