@@ -1,0 +1,32 @@
+name: MITM
+options:
+  bundleIdPrefix: com.jjw
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  MacInTheMybag:
+    path: ../..
+targets:
+  MITM:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    dependencies:
+      - package: MacInTheMybag
+        product: IOSClient
+    info:
+      path: Info.plist
+      properties:
+        UILaunchScreen: {}
+        NSCameraUsageDescription: "Scan the pairing QR shown on your Mac"
+        NSLocalNetworkUsageDescription: "Connect to your Mac over the local network"
+        NSBonjourServices:
+          - _mitm._udp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jjw.MITM
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"

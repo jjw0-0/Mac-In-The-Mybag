@@ -10,9 +10,11 @@ public struct PairingPayload: Codable, Equatable, Sendable {
     public var version: Int
     public var hostName: String
     public var publicKey: Data
-    public var fingerprint: String
     public var connectionHints: [String]   // e.g. ["192.168.2.1:7000"]
     public var nonce: Data
+
+    /// SHA-256 of `publicKey` (derived, not encoded — keeps the QR small).
+    public var fingerprint: String { Fingerprint.sha256Hex(publicKey) }
 
     public init(version: Int = 1,
                 hostName: String,
@@ -22,7 +24,6 @@ public struct PairingPayload: Codable, Equatable, Sendable {
         self.version = version
         self.hostName = hostName
         self.publicKey = publicKey
-        self.fingerprint = Fingerprint.sha256Hex(publicKey)
         self.connectionHints = connectionHints
         self.nonce = nonce
     }

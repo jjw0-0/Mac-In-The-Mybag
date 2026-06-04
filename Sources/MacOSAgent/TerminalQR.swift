@@ -9,7 +9,7 @@ public enum TerminalQR {
         guard let data = string.data(using: .utf8),
               let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
         filter.setValue(data, forKey: "inputMessage")
-        filter.setValue("M", forKey: "inputCorrectionLevel")
+        filter.setValue("L", forKey: "inputCorrectionLevel")
         guard let ciImage = filter.outputImage else { return nil }
 
         let context = CIContext(options: nil)
@@ -28,18 +28,34 @@ public enum TerminalQR {
         bitmap.fill(CGRect(x: 0, y: 0, width: width, height: height))
         bitmap.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
-        let border = 2
-        let blankLine = String(repeating: "  ", count: width + border * 2)
-        var lines: [String] = Array(repeating: blankLine, count: border)
-        for y in 0..<height {
-            var row = String(repeating: "  ", count: border)
-            for x in 0..<width {
-                row += pixels[y * width + x] < 128 ? "██" : "  "
-            }
-            row += String(repeating: "  ", count: border)
-            lines.append(row)
+        // Compact rendering: half-block (▀) packs two module rows per text line and one
+        // column per character. ANSI fg/bg force true black-on-white regardless of the
+        // terminal theme (so phone scanners read it). A 4-module quiet zone is added.
+        func dark(_ x: Int, _ y: Int) -> Bool {
+            guard x >= 0, x < width, y >= 0, y < height else { return false } // outside = light
+            return pixels[y * width + x] < 128
         }
-        lines.append(contentsOf: Array(repeating: blankLine, count: border))
+        let esc = "\u{1b}"
+        let reset = "\(esc)[0m"
+        let quiet = 4
+        var lines: [String] = []
+        var y = -quiet
+        while y < height + quiet {
+            var line = ""
+            var lastFg = -1, lastBg = -1
+            for x in (-quiet)..<(width + quiet) {
+                let fg = dark(x, y) ? 30 : 97        // 30 = black, 97 = bright white
+                let bg = dark(x, y + 1) ? 40 : 107   // 40 = black bg, 107 = white bg
+                if fg != lastFg || bg != lastBg {
+                    line += "\(esc)[\(fg);\(bg)m"
+                    lastFg = fg; lastBg = bg
+                }
+                line += "▀"
+            }
+            line += reset
+            lines.append(line)
+            y += 2
+        }
         return lines.joined(separator: "\n")
     }
 }
