@@ -94,70 +94,154 @@ public final class RemoteDesktopModel: ObservableObject {
     }
 }
 
-/// The app's main screen: scan a pairing QR, then render the remote desktop with a
-/// trackpad overlay. Embed this in an iOS app target.
+/// The app's main screen. Disconnected → a clean device picker (tap a Mac found on your
+/// network; manual entry lives in a sheet). Connected → the remote screen with a trackpad.
 public struct RemoteDesktopView: View {
     @StateObject private var model = RemoteDesktopModel()
+    @State private var showManual = false
     @State private var host = ""
     @State private var portText = "7000"
 
     public init() {}
 
     public var body: some View {
-        ZStack {
+        Group {
             if model.isConnected {
-                RemoteScreenView { view in model.attach(view) }
-                    .ignoresSafeArea()
-                GestureOverlay { gesture in model.client?.send(gesture: gesture) }
-                    .ignoresSafeArea()
+                remoteScreen
             } else {
-                QRScannerView { code in model.handleScannedCode(code) }
-                    .ignoresSafeArea()
-                VStack(spacing: 16) {
-                    Spacer()
-                    Text("Scan the pairing QR shown on your Mac")
-                        .padding(.horizontal, 16).padding(.vertical, 10)
-                        .background(.ultraThinMaterial, in: Capsule())
-                    if !model.status.isEmpty {
-                        Text(model.status)
-                            .font(.footnote)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(.ultraThinMaterial, in: Capsule())
-                    }
-                    if !model.devices.isEmpty {
-                        VStack(spacing: 6) {
-                            Text("Found on your network").font(.caption).foregroundStyle(.secondary)
-                            ForEach(model.devices) { device in
-                                Button { model.connect(to: device) } label: {
-                                    Label(device.name, systemImage: "desktopcomputer")
-                                }
-                                .buttonStyle(.borderedProminent)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                    }
-                    HStack(spacing: 8) {
-                        TextField("host", text: $host)
-                            .textFieldStyle(.roundedBorder)
-                            .autocorrectionDisabled()
-                            .textInputAutocapitalization(.never)
-                        TextField("port", text: $portText)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 72)
-                        Button("Connect") {
-                            model.connectManually(host: host, port: UInt16(portText) ?? 7000)
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 32)
-                }
-                .onAppear { model.startDiscovery() }
+                connectScreen
             }
         }
+    }
+
+    // MARK: - Connected
+
+    private var remoteScreen: some View {
+        ZStack {
+            RemoteScreenView { view in model.attach(view) }
+                .ignoresSafeArea()
+            GestureOverlay { gesture in model.client?.send(gesture: gesture) }
+                .ignoresSafeArea()
+        }
+    }
+
+    // MARK: - Connect (device picker)
+
+    private var connectScreen: some View {
+        ZStack {
+            LinearGradient(colors: [Color(red: 0.04, green: 0.06, blue: 0.13),
+                                    Color(red: 0.10, green: 0.07, blue: 0.22)],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Spacer()
+                branding.padding(.bottom, 40)
+                deviceList.padding(.horizontal, 24)
+                Spacer()
+                manualButton.padding(.bottom, 24)
+            }
+        }
+        .onAppear { model.startDiscovery() }
+        .sheet(isPresented: $showManual) { manualSheet }
+    }
+
+    private var branding: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "macbook.and.iphone")
+                .font(.system(size: 46, weight: .regular))
+                .foregroundStyle(.white)
+            Text("Mac-In-The-Myphone")
+                .font(.title2.weight(.bold))
+                .foregroundStyle(.white)
+            Text("Your Mac, in your pocket")
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.55))
+        }
+    }
+
+    @ViewBuilder private var deviceList: some View {
+        if model.devices.isEmpty {
+            VStack(spacing: 14) {
+                ProgressView().tint(.white)
+                Text("Searching for your Mac…")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.6))
+                statusText
+            }
+        } else {
+            VStack(spacing: 12) {
+                ForEach(model.devices) { device in
+                    Button { model.connect(to: device) } label: { deviceRow(device.name) }
+                        .buttonStyle(.plain)
+                }
+                statusText.padding(.top, 4)
+            }
+        }
+    }
+
+    private func deviceRow(_ name: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: "desktopcomputer")
+                .font(.title3).foregroundStyle(.white).frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name).font(.body.weight(.semibold)).foregroundStyle(.white)
+                Text("Tap to connect").font(.caption).foregroundStyle(.white.opacity(0.55))
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold)).foregroundStyle(.white.opacity(0.4))
+        }
+        .padding(16)
+        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.12)))
+    }
+
+    @ViewBuilder private var statusText: some View {
+        if !model.status.isEmpty {
+            Text(model.status)
+                .font(.footnote)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.white.opacity(0.7))
+        }
+    }
+
+    private var manualButton: some View {
+        Button { showManual = true } label: {
+            Label("Connect manually", systemImage: "keyboard")
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.65))
+        }
+    }
+
+    private var manualSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Mac address") {
+                    TextField("Host (e.g. 192.168.0.12)", text: $host)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.numbersAndPunctuation)
+                    TextField("Port", text: $portText)
+                        .keyboardType(.numberPad)
+                }
+                Section {
+                    Button("Connect") {
+                        model.connectManually(host: host, port: UInt16(portText) ?? 7000)
+                        showManual = false
+                    }
+                    .disabled(host.isEmpty)
+                }
+            }
+            .navigationTitle("Manual connect")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showManual = false }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 }
 #endif
